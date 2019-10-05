@@ -3,7 +3,9 @@ window.Garu = {
     canvas: "",
     ctx: "",
     drawingObjs: [],
-    clickItem: ""
+    clickItem: "",
+    chooseCursor: "move",
+    defaultCursor: "default"
 };
 
 Garu.init = function (obj) {
@@ -111,9 +113,9 @@ Garu.initDrag = function () {
         var startY = e.offsetY;
         _this.getClickItem(startX, startY);
         if (_this.clickItem != null) {
-            document.body.style.cursor = "pointer";
+            document.body.style.cursor = _this.chooseCursor;
         } else {
-            document.body.style.cursor = "default";
+            document.body.style.cursor = _this.defaultCursor;
         }
     }
     _this.canvas.onmousedown = function (e) {
@@ -132,7 +134,7 @@ Garu.initDrag = function () {
             if (_this.clickItem != null) {
                 _this.clickItem.x = clickX + offsetX;
                 _this.clickItem.y = clickY + offsetY;
-                document.body.style.cursor = "pointer";
+                document.body.style.cursor = _this.chooseCursor;
             }
         }
         _this.canvas.onmouseup = function () {
@@ -141,9 +143,9 @@ Garu.initDrag = function () {
                 var startY = e.offsetY;
                 _this.getClickItem(startX, startY);
                 if (_this.clickItem != null) {
-                    document.body.style.cursor = "pointer";
+                    document.body.style.cursor = _this.chooseCursor;
                 } else {
-                    document.body.style.cursor = "default";
+                    document.body.style.cursor = _this.defaultCursor;
                 }
             }
         }
