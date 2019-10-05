@@ -30,6 +30,8 @@ Garu.startCanvas = function (obj) {
     _this.ctx.fillRect(0, 0, _this.canvasObj.width, _this.canvasObj.height);
 }
 
+// -------------------------------------
+// Object
 Garu.Rect = function (obj) {
     var _this = Garu;
 
@@ -44,6 +46,21 @@ Garu.Rect = function (obj) {
 
     return obj;
 }
+
+Garu.Circle = function (obj) {
+    var _this = Garu;
+
+    var obj = obj ? obj : {};
+    obj.type = "circle";
+    obj.x = _this.FitValue(obj.x, 0);
+    obj.y = _this.FitValue(obj.y, 0);
+    obj.r = _this.FitValue(obj.r, 100);
+    obj.bgColor = _this.FitValue(obj.bgColor, "skyblue");
+    obj.isDrag = _this.FitValue(obj.isDrag, _this.canvasObj.isDrag);
+
+    return obj;
+}
+// -------------------------------------
 
 Garu.add = function (obj) {
     var _this = Garu;
@@ -60,6 +77,9 @@ Garu.update = function () {
             case "rect":
                 _this.drawRect(ele);
                 break;
+            case "circle":
+                _this.drawCircle(ele);
+                break;
         }
     }
     requestAnimationFrame(Garu.update);
@@ -70,6 +90,14 @@ Garu.drawRect = function (obj) {
 
     _this.ctx.fillStyle = obj.bgColor;
     _this.ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+}
+
+Garu.drawCircle = function (obj) {
+    var _this = Garu;
+    _this.ctx.fillStyle = obj.bgColor;
+    _this.ctx.beginPath();
+    _this.ctx.arc(obj.x, obj.y, obj.r, 0, 2 * Math.PI);
+    _this.ctx.fill();
 }
 
 Garu.FitValue = function (nowVaule, defaultValue) {
@@ -92,8 +120,10 @@ Garu.initDrag = function () {
         var startX = e.offsetX;
         var startY = e.offsetY;
         _this.getClickItem(startX, startY);
-        var clickX = _this.clickItem.x;
-        var clickY = _this.clickItem.y;
+        if (_this.clickItem != null) {
+            var clickX = _this.clickItem.x;
+            var clickY = _this.clickItem.y;
+        }
         _this.canvas.onmousemove = function (e) {
             var moveX = e.offsetX;
             var moveY = e.offsetY;
@@ -125,9 +155,16 @@ Garu.getClickItem = function (x, y) {
     var clickItem = null;
     for (var i = _this.drawingObjs.length - 1; i >= 0; i--) {
         var ele = _this.drawingObjs[i];
-        if (x >= ele.x && (x <= ele.x + ele.width) && y >= ele.y && (y <= ele.y + ele.height)) {
-            clickItem = ele;
-            break;
+        if (ele.type == "rect") {
+            if (x >= ele.x && (x <= ele.x + ele.width) && y >= ele.y && (y <= ele.y + ele.height)) {
+                clickItem = ele;
+                break;
+            }
+        } else if (ele.type == "circle") {
+            if (x >= (ele.x - ele.r) && (x <= ele.x + ele.r) && y >= (ele.y - ele.r) && (y <= ele.y + ele.r)) {
+                clickItem = ele;
+                break;
+            }
         }
     }
     _this.clickItem = clickItem;
