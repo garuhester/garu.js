@@ -62,30 +62,23 @@ Garu.Circle = function (obj) {
 
     return obj;
 }
+
+Garu.Line = function (obj) {
+    var _this = Garu;
+
+    var obj = obj ? obj : {};
+    obj.type = "line";
+    obj.x = _this.FitValue(obj.x, 0);
+    obj.y = _this.FitValue(obj.y, 0);
+    obj.ex = _this.FitValue(obj.ex, 0);
+    obj.ey = _this.FitValue(obj.ey, 0);
+    obj.lineWidth = _this.FitValue(obj.lineWidth, 0);
+    obj.bgColor = _this.FitValue(obj.bgColor, "skyblue");
+    obj.isDrag = _this.FitValue(obj.isDrag, _this.canvasObj.isDrag);
+
+    return obj;
+}
 // -------------------------------------
-
-Garu.add = function (obj) {
-    var _this = Garu;
-    _this.drawingObjs.push(obj);
-}
-
-Garu.update = function () {
-    var _this = Garu;
-    _this.ctx.fillStyle = _this.canvasObj.bgColor ? _this.canvasObj.bgColor : "#fff";
-    _this.ctx.fillRect(0, 0, _this.canvasObj.width, _this.canvasObj.height);
-    for (var i = 0; i < _this.drawingObjs.length; i++) {
-        var ele = _this.drawingObjs[i];
-        switch (ele.type) {
-            case "rect":
-                _this.drawRect(ele);
-                break;
-            case "circle":
-                _this.drawCircle(ele);
-                break;
-        }
-    }
-    requestAnimationFrame(Garu.update);
-}
 
 Garu.drawRect = function (obj) {
     var _this = Garu;
@@ -102,10 +95,49 @@ Garu.drawCircle = function (obj) {
     _this.ctx.fill();
 }
 
+Garu.drawLine = function (obj) {
+    var _this = Garu;
+    _this.ctx.lineWidth = obj.lineWidth;
+    _this.ctx.strokeStyle = obj.bgColor;
+    _this.ctx.beginPath();
+    _this.ctx.moveTo(obj.x, obj.y);
+    _this.ctx.lineTo(obj.ex, obj.ey);
+    _this.ctx.stroke();
+}
+
+//添加到渲染队列
+Garu.add = function (obj) {
+    var _this = Garu;
+    _this.drawingObjs.push(obj);
+}
+
+//刷新画布
+Garu.update = function () {
+    var _this = Garu;
+    _this.ctx.fillStyle = _this.canvasObj.bgColor ? _this.canvasObj.bgColor : "#fff";
+    _this.ctx.fillRect(0, 0, _this.canvasObj.width, _this.canvasObj.height);
+    for (var i = 0; i < _this.drawingObjs.length; i++) {
+        var ele = _this.drawingObjs[i];
+        switch (ele.type) {
+            case "rect":
+                _this.drawRect(ele);
+                break;
+            case "circle":
+                _this.drawCircle(ele);
+                break;
+            case "line":
+                _this.drawLine(ele);
+                break;
+        }
+    }
+    requestAnimationFrame(Garu.update);
+}
+
 Garu.FitValue = function (nowVaule, defaultValue) {
     return nowVaule ? nowVaule : defaultValue;
 }
 
+//元素拖拽
 Garu.initDrag = function () {
     var _this = Garu;
     _this.canvas.onmousemove = function (e) {
@@ -123,8 +155,15 @@ Garu.initDrag = function () {
         var startY = e.offsetY;
         _this.getClickItem(startX, startY);
         if (_this.clickItem != null) {
-            var clickX = _this.clickItem.x;
-            var clickY = _this.clickItem.y;
+            if (_this.clickItem.type == "line") {
+                var clickX = _this.clickItem.x;
+                var clickY = _this.clickItem.y;
+                var clickeX = _this.clickItem.ex;
+                var clickeY = _this.clickItem.ey;
+            } else {
+                var clickX = _this.clickItem.x;
+                var clickY = _this.clickItem.y;
+            }
         }
         _this.canvas.onmousemove = function (e) {
             var moveX = e.offsetX;
@@ -132,8 +171,15 @@ Garu.initDrag = function () {
             var offsetX = moveX - startX;
             var offsetY = moveY - startY;
             if (_this.clickItem != null) {
-                _this.clickItem.x = clickX + offsetX;
-                _this.clickItem.y = clickY + offsetY;
+                if (_this.clickItem.type == "line") {
+                    _this.clickItem.x = clickX + offsetX;
+                    _this.clickItem.y = clickY + offsetY;
+                    _this.clickItem.ex = clickeX + offsetX;
+                    _this.clickItem.ey = clickeY + offsetY;
+                } else {
+                    _this.clickItem.x = clickX + offsetX;
+                    _this.clickItem.y = clickY + offsetY;
+                }
                 document.body.style.cursor = _this.chooseCursor;
             }
         }
@@ -152,6 +198,7 @@ Garu.initDrag = function () {
     }
 }
 
+//获取点中元素
 Garu.getClickItem = function (x, y) {
     var _this = Garu;
     var clickItem = null;
@@ -164,6 +211,11 @@ Garu.getClickItem = function (x, y) {
             }
         } else if (ele.type == "circle") {
             if (x >= (ele.x - ele.r) && (x <= ele.x + ele.r) && y >= (ele.y - ele.r) && (y <= ele.y + ele.r)) {
+                clickItem = ele;
+                break;
+            }
+        } else if (ele.type == "line") {
+            if (x >= (ele.x - ele.lineWidth / 2) && (x <= ele.x + ele.lineWidth / 2) && y >= ele.y && (y <= ele.y + (ele.ey - ele.y))) {
                 clickItem = ele;
                 break;
             }
